@@ -1,9 +1,11 @@
-import Web3 from "web3";
+import Web3 from "web3"; // eslint-disable-line import/no-unresolved
 
 export default class MetaMask {
-  static async initialize() {
+  static async initialize({ maxListeners } = { maxListeners: 300 }) {
     const instance = await MetaMask.getWeb3();
-    return new MetaMask(instance.currentProvider);
+    const provider = instance.currentProvider;
+    provider.setMaxListeners(maxListeners);
+    return new MetaMask(provider);
   }
 
   static async getWeb3() {

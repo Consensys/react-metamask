@@ -8,13 +8,21 @@
     "prop-types": "^15.6.2",
     "react": "^16.4.1",
     "react-dom": "^16.4.1",
-    "react-scripts": "^1.1.4",
-    "react-metamask": "link:.."
+    "react-scripts": "^2.1.8"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test --env=jsdom",
-    "eject": "react-scripts eject"
-  }
+    "start": "SKIP_PREFLIGHT_CHECK=true react-scripts start",
+    "build": "SKIP_PREFLIGHT_CHECK=true react-scripts build",
+    "test": "SKIP_PREFLIGHT_CHECK=true react-scripts test --env=jsdom",
+    "eject": "SKIP_PREFLIGHT_CHECK=true react-scripts eject"
+  },
+  "devDependencies": {
+    "eslint": "^5.15.1"
+  },
+  "browserslist": [
+    ">0.2%",
+    "not dead",
+    "not ie <= 11",
+    "not op_mini all"
+  ]
 }

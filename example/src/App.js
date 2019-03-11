@@ -1,13 +1,15 @@
-import React, { Component } from 'react'
+import React from "react";
 
-import ExampleComponent from 'react-metamask'
+import MetaMaskContext from "./metamask";
+import MetaMaskButton from "./MetaMaskButton";
 
-export default class App extends Component {
-  render () {
-    return (
-      <div>
-        <ExampleComponent text='Modern React component module' />
-      </div>
-    )
-  }
+export default function App() {
+  return (
+    <div>
+      <h3>Hello d-app user</h3>
+      <MetaMaskContext.Provider immediate value={null}>
+        <MetaMaskButton />
+      </MetaMaskContext.Provider>
+    </div>
+  );
 }

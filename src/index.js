@@ -1,4 +1,4 @@
-import React from "react"; // eslint-disable-line import/no-unresolved
+import React, { Component } from "react"; // eslint-disable-line import/no-unresolved
 import PropTypes from "prop-types";
 
 import MetaMaskClass from "./MetaMask";
@@ -7,18 +7,25 @@ export function createMetaMaskContext(initial = null) {
   const Context = React.createContext(initial);
   Context.displayName = "MetaMaskContext";
 
-  class MetaMaskContextProvider extends React.Component {
+  const ContextProvider = Context.Provider;
+
+  class MetaMaskContextProvider extends Component {
     static propTypes = {
       // TODO: instance of web3?
       value: PropTypes.any, // eslint-disable-line react/forbid-prop-types
       delay: PropTypes.number,
       immediate: PropTypes.bool,
+      /**
+       * MetaMask class initialize options
+       */
+      options: PropTypes.object,
     };
 
     static defaultProps = {
       value: null,
       delay: 3000,
       immediate: false,
+      options: undefined,
     };
 
     state = {
@@ -54,7 +61,7 @@ export function createMetaMaskContext(initial = null) {
       let accounts = [];
 
       try {
-        const metamask = await MetaMaskClass.initialize();
+        const metamask = await MetaMaskClass.initialize(this.props.options);
         web3 = await metamask.getWeb3();
         accounts = await metamask.getAccounts();
       } catch (err) {
@@ -65,22 +72,24 @@ export function createMetaMaskContext(initial = null) {
     };
 
     render() {
-      const value = {
+      const { value, ...props } = this.props;
+
+      const internalValue = {
         web3: this.state.web3,
         accounts: this.state.accounts,
         awaiting: this.state.awaiting,
         error: this.state.error,
         openMetaMask: this.handleWatch,
+        // override with user's initial value. TODO: improve performance
+        ...value,
       };
 
-      return <Context.Provider {...this.props} value={value} />;
+      return <ContextProvider {...props} value={internalValue} />;
     }
   }
 
-  return {
-    Provider: MetaMaskContextProvider,
-    Consumer: Context.Consumer,
-  };
+  Context.Provider = MetaMaskContextProvider;
+  return Context;
 }
 
 export const MetaMask = MetaMaskClass;
