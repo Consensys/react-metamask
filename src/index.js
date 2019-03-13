@@ -47,13 +47,6 @@ export function createMetaMaskContext(initial = null) {
     }
 
     shouldComponentUpdate(nextProps, nextState) {
-      console.log(
-        this.state.web3,
-        nextState.web3,
-        "EQ:",
-        this.state.web3 !== nextState.web3,
-      );
-
       if (this.state.accounts !== nextState.accounts) {
         return true;
       } else if (this.state.web3 !== nextState.web3) {
