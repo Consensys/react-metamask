@@ -1,5 +1,6 @@
 import React, { Component } from "react"; // eslint-disable-line import/no-unresolved
 import PropTypes from "prop-types";
+import isEqual from "lodash/isEqual";
 
 import MetaMaskClass from "./MetaMask";
 
@@ -40,6 +41,8 @@ export function createMetaMaskContext(initial = null) {
 
     timeout = null; // timer created with `setTimeout`
 
+    metamask = null;
+
     componentDidMount() {
       if (this.props.immediate) {
         this.handleWatch();
@@ -78,9 +81,11 @@ export function createMetaMaskContext(initial = null) {
       let accounts = [];
 
       try {
-        const metamask = await MetaMaskClass.initialize(this.props.options);
-        web3 = await metamask.getWeb3();
-        accounts = await metamask.getAccounts();
+        if (!this.metamask) {
+          this.metamask = await MetaMaskClass.initialize(this.props.options);
+        }
+        web3 = await this.metamask.getWeb3();
+        accounts = await this.metamask.getAccounts();
       } catch (err) {
         error = err;
       }
@@ -96,6 +101,10 @@ export function createMetaMaskContext(initial = null) {
 
     // eslint-disable-next-line camelcase
     UNSAFE_componentWillReceiveProps(nextProps) {
+      if (!isEqual(this.props.options, nextProps.options)) {
+        this.metamask = null;
+      }
+
       if (nextProps.immediate) {
         this.handleWatch();
       } else if (this.timeout) {
