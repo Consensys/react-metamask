@@ -1,5 +1,6 @@
 import React, { Component } from "react"; // eslint-disable-line import/no-unresolved
 import PropTypes from "prop-types";
+import isEqual from "lodash/isEqual";
 
 import MetaMaskClass from "./MetaMask";
 
@@ -11,7 +12,9 @@ export function createMetaMaskContext(initial = null) {
 
   class MetaMaskContextProvider extends Component {
     static propTypes = {
-      // TODO: instance of web3?
+      /**
+       * Initial value is an object shaped like { web3, accounts, error, awaiting }
+       */
       value: PropTypes.any, // eslint-disable-line react/forbid-prop-types
       delay: PropTypes.number,
       immediate: PropTypes.bool,
@@ -23,7 +26,7 @@ export function createMetaMaskContext(initial = null) {
 
     static defaultProps = {
       value: null,
-      delay: 3000,
+      delay: 3000, // retry/update every 3 seconds by default
       immediate: false,
       options: undefined,
     };
@@ -31,15 +34,32 @@ export function createMetaMaskContext(initial = null) {
     state = {
       web3: null,
       accounts: [],
+      awaiting: false,
       error: null,
       ...this.props.value,
     };
 
-    timeout = null;
+    timeout = null; // timer created with `setTimeout`
+
+    metamask = null;
 
     componentDidMount() {
       if (this.props.immediate) {
         this.handleWatch();
+      }
+    }
+
+    shouldComponentUpdate(nextProps, nextState) {
+      if (this.state.accounts !== nextState.accounts) {
+        return true;
+      } else if (this.state.web3 !== nextState.web3) {
+        return true;
+      } else if (this.state.error !== nextState.error) {
+        return true;
+      } else if (this.state.awaiting !== nextState.awaiting) {
+        return true;
+      } else {
+        return false;
       }
     }
 
@@ -61,15 +81,37 @@ export function createMetaMaskContext(initial = null) {
       let accounts = [];
 
       try {
-        const metamask = await MetaMaskClass.initialize(this.props.options);
-        web3 = await metamask.getWeb3();
-        accounts = await metamask.getAccounts();
+        if (!this.metamask) {
+          this.metamask = await MetaMaskClass.initialize(this.props.options);
+        }
+        web3 = await this.metamask.getWeb3();
+        accounts = await this.metamask.getAccounts();
       } catch (err) {
         error = err;
       }
+
       this.setState({ web3, accounts, error, awaiting: false });
-      this.timeout = setTimeout(this.handleWatch, this.props.delay);
+
+      if (error && error.message === "User denied account authorization") {
+        // Do not retry and wait the user to call `this.handleWatch` through `openMetaMask`.
+      } else {
+        this.timeout = setTimeout(this.handleWatch, this.props.delay);
+      }
     };
+
+    // eslint-disable-next-line camelcase
+    UNSAFE_componentWillReceiveProps(nextProps) {
+      if (!isEqual(this.props.options, nextProps.options)) {
+        this.metamask = null;
+      }
+
+      if (nextProps.immediate) {
+        this.handleWatch();
+      } else if (this.timeout) {
+        // nextProps.immediate is false so stop timeout (if present).
+        clearTimeout(this.timeout);
+      }
+    }
 
     render() {
       const { value, ...props } = this.props;
@@ -80,8 +122,6 @@ export function createMetaMaskContext(initial = null) {
         awaiting: this.state.awaiting,
         error: this.state.error,
         openMetaMask: this.handleWatch,
-        // override with user's initial value. TODO: improve performance
-        ...value,
       };
 
       return <ContextProvider {...props} value={internalValue} />;
