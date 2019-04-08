@@ -7,7 +7,7 @@
 This module requires `web3` as an external dependency. For compatibility reasons please use the fixed version stated in this project.
 
 ```sh
-yarn install @tokenfoundry/react-metamask web3@=1.0.0-beta.37
+yarn add @tokenfoundry/react-metamask web3@=1.0.0-beta.37
 ```
 
 ## Usage
