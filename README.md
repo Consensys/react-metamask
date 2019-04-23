@@ -34,7 +34,7 @@ export default MetaMaskContext;
 Then make sure to render the `Provider` on the top entry file of your app:
 
 ```js
-// App.js
+// App.js (_app.js if using Next.js)
 import React from "react";
 
 import MetaMaskContext from "./metamask";
@@ -50,7 +50,7 @@ export default function App() {
 }
 ```
 
-Finally use the context wherever you need:
+Finally use the context wherever you need (example using React Hooks):
 
 ```js
 // MetaMaskButton.js
@@ -94,13 +94,76 @@ export default function MetaMaskButton() {
   } else if (accounts.length === 0) {
     return <button type="button">No Wallet 🦊</button>;
   } else {
+    // `web3` and `account` loaded 🎉
     return (
       <button type="button" onClick={handleButtonClick}>
-        <code>{accounts[0].slice(0, 16)}</code> 🦊
+        <code>{accounts[0]}</code> 🦊 (v: {web3.version.api})
       </button>
     );
   }
 }
+```
+
+### How to create a HOC for React classes
+
+In case you are not using React Hooks and you need access to `web3` and the other params, you can create a High-Order-Component like this:
+
+```js
+// metamask.js
+import React from "react";
+import PropTypes from "prop-types";
+import { createMetaMaskContext } from "@tokenfoundry/react-metamask";
+
+const MetaMaskContext = createMetaMaskContext();
+
+export function withMetamask(Component) {
+  return React.forwardRef((props, ref) => (
+    <MetaMaskContext.Consumer>
+      {metamask => <Component ref={ref} metamask={metamask} {...this.props} />}
+    </MetaMaskContext.Consumer>
+  ));
+}
+
+export const PropTypesMetamask = PropTypes.shape({
+  web3: PropTypes.object,
+  accounts: PropTypes.arrayOf(PropTypes.string).isRequired,
+  error: PropTypes.object, // `Error` type
+  awaiting: PropTypes.bool.isRequired,
+  openMetaMask: PropTypes.func.isRequired,
+});
+
+export default MetaMaskContext;
+```
+
+```js
+// MetaMaskButton.js
+import React, { Component } from "react";
+
+import MetaMaskContext, { withMetamask, PropTypesMetamask } from "./metamask";
+
+class MetaMaskButton extends Component {
+  static propTypes = {
+    metamask: PropTypesMetamask,
+  };
+
+  static defaultProps = {
+    metamask: {},
+  };
+
+  componentDidMount() {
+    const { web3, accounts } = this.props.metamask;
+    if (web3) {
+      // ...
+    }
+  }
+
+  render() {
+    const { web3, accounts, error, awaiting, openMetaMask } = this.props.metamask;
+    // ...
+  }
+}
+
+export default withMetamask(MetaMaskButton);
 ```
 
 ## License
