@@ -19,7 +19,7 @@ export default class MetaMask {
       window.web3 = new window.Web3(window.web3.currentProvider);
       return window.web3;
     } else {
-      throw new Error("Web3 not initialized");
+      throw new Error("MetaMask not installed");
     }
   }
 
