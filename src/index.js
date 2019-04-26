@@ -1,8 +1,20 @@
 import React, { Component } from "react"; // eslint-disable-line import/no-unresolved
 import PropTypes from "prop-types";
 import isEqual from "lodash/isEqual";
+import sortBy from "lodash/sortBy";
 
 import MetaMaskClass from "./MetaMask";
+
+async function withTimeoutRejection(promise, timeout) {
+  const sleep = new Promise((resolve, reject) =>
+    setTimeout(() => reject(new Error("Timeout")), timeout),
+  );
+  return Promise.race([promise, sleep]);
+}
+
+function isEqualArray(array1, array2) {
+  return isEqual(sortBy(array1), sortBy(array2));
+}
 
 export function createMetaMaskContext(initial = null) {
   const Context = React.createContext(initial);
@@ -16,7 +28,18 @@ export function createMetaMaskContext(initial = null) {
        * Initial value is an object shaped like { web3, accounts, error, awaiting }
        */
       value: PropTypes.any, // eslint-disable-line react/forbid-prop-types
+      /**
+       * Refresh interval for MetaMask changes.
+       */
       delay: PropTypes.number,
+      /**
+       * Prevent memory leaks by making the PopUp timeout after some time.
+       * This doesn't close the popup.
+       */
+      timeout: PropTypes.number,
+      /**
+       * Start MetaMask when loading the page.
+       */
       immediate: PropTypes.bool,
       /**
        * MetaMask class initialize options
@@ -27,6 +50,7 @@ export function createMetaMaskContext(initial = null) {
     static defaultProps = {
       value: null,
       delay: 3000, // retry/update every 3 seconds by default
+      timeout: 20000, // wait for user to activate MetaMask.
       immediate: false,
       options: undefined,
     };
@@ -39,7 +63,7 @@ export function createMetaMaskContext(initial = null) {
       ...this.props.value,
     };
 
-    timeout = null; // timer created with `setTimeout`
+    watcher = null; // timer created with `setTimeout`
 
     metamask = null;
 
@@ -50,13 +74,13 @@ export function createMetaMaskContext(initial = null) {
     }
 
     shouldComponentUpdate(nextProps, nextState) {
-      if (this.state.accounts !== nextState.accounts) {
+      if (this.state.awaiting !== nextState.awaiting) {
         return true;
       } else if (this.state.web3 !== nextState.web3) {
         return true;
       } else if (this.state.error !== nextState.error) {
         return true;
-      } else if (this.state.awaiting !== nextState.awaiting) {
+      } else if (!isEqualArray(this.state.accounts, nextState.accounts)) {
         return true;
       } else {
         return false;
@@ -64,39 +88,46 @@ export function createMetaMaskContext(initial = null) {
     }
 
     componentWillUnmount() {
-      if (this.timeout) {
-        clearTimeout(this.timeout);
+      if (this.watcher) {
+        clearTimeout(this.watcher);
       }
     }
 
     handleWatch = async () => {
-      if (this.timeout) {
-        clearTimeout(this.timeout);
+      if (this.watcher) {
+        clearTimeout(this.watcher);
       }
 
-      this.setState({ awaiting: true });
+      if (!this.state.web3 || !this.state.accounts.length) {
+        this.setState({ awaiting: true });
+      }
 
-      let error = null;
+      let error = this.state.error;
       let web3 = null;
       let accounts = [];
 
       try {
-        if (!this.metamask) {
-          this.metamask = await MetaMaskClass.initialize(this.props.options);
+        const isLocked = error && error.message === "MetaMask is locked";
+        if (!this.metamask || isLocked) {
+          this.metamask = await withTimeoutRejection(
+            MetaMaskClass.initialize(this.props.options),
+            this.props.timeout,
+          );
         }
         web3 = await this.metamask.getWeb3();
         accounts = await this.metamask.getAccounts();
+        error = null;
       } catch (err) {
         error = err;
       }
 
-      this.setState({ web3, accounts, error, awaiting: false });
-
-      if (error && error.message === "User denied account authorization") {
-        // Do not retry and wait the user to call `this.handleWatch` through `openMetaMask`.
-      } else {
-        this.timeout = setTimeout(this.handleWatch, this.props.delay);
+      if (!error) {
+        this.watcher = setTimeout(this.handleWatch, this.props.delay);
       }
+
+      const nextState = { web3, accounts, error, awaiting: false };
+      this.setState(nextState);
+      return nextState;
     };
 
     // eslint-disable-next-line camelcase
@@ -107,9 +138,9 @@ export function createMetaMaskContext(initial = null) {
 
       if (nextProps.immediate) {
         this.handleWatch();
-      } else if (this.timeout) {
+      } else if (this.watcher) {
         // nextProps.immediate is false so stop timeout (if present).
-        clearTimeout(this.timeout);
+        clearTimeout(this.watcher);
       }
     }
 

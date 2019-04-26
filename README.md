@@ -67,11 +67,23 @@ export default function MetaMaskButton() {
     alert(`Web3 (${web3.version}) is enabled`);
   }
 
-  if (error && error.notInstalled) {
+  if (error && error.message === "MetaMask not installed") {
     return (
       <a href="https://metamask.io/" target="_blank" rel="noopener noreferrer">
         Install MetaMask
       </a>
+    );
+  } else if (error && error.message === "User denied account authorization") {
+    return (
+      <button type="button" onClick={openMetaMask}>
+        Please allow MetaMask to connect.
+      </button>
+    );
+  } else if (error && error.message === "MetaMask is locked") {
+    return (
+      <button type="button" onClick={openMetaMask}>
+        Please allow MetaMask to connect.
+      </button>
     );
   } else if (error) {
     return (
