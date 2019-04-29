@@ -5,10 +5,11 @@
   "license": "MIT",
   "private": true,
   "dependencies": {
+    "@tokenfoundry/react-metamask": "file:..",
     "prop-types": "^15.6.2",
-    "react": "^16.4.1",
-    "react-dom": "^16.4.1",
-    "react-scripts": "^2.1.8"
+    "react": "^16.8.6",
+    "react-dom": "^16.8.6",
+    "react-scripts": "^3.0.0"
   },
   "scripts": {
     "start": "SKIP_PREFLIGHT_CHECK=true react-scripts start",
@@ -17,7 +18,7 @@
     "eject": "SKIP_PREFLIGHT_CHECK=true react-scripts eject"
   },
   "devDependencies": {
-    "eslint": "^5.15.1"
+    "eslint": "^5.16.0"
   },
   "browserslist": [
     ">0.2%",
