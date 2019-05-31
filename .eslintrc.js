@@ -6,5 +6,6 @@ module.exports = {
   rules: {
     "jsx-a11y/label-has-associated-control": "off",
     "react/forbid-prop-types": "off",
+    "react/no-multi-comp": "off",
   },
 };

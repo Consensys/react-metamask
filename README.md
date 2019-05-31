@@ -116,9 +116,9 @@ export default function MetaMaskButton() {
 }
 ```
 
-### How to create a HOC for React classes
+### HOC for React classes
 
-In case you are not using React Hooks and you need access to `web3` and the other params, you can create a High-Order-Component like this:
+In case you are not using React Hooks and you need access to `web3` and the other params, you can use a High-Order-Component like this:
 
 ```js
 // metamask.js
@@ -128,38 +128,19 @@ import { createMetaMaskContext } from "@tokenfoundry/react-metamask";
 
 const MetaMaskContext = createMetaMaskContext();
 
-export function withMetamask(Component) {
-  return React.forwardRef((props, ref) => (
-    <MetaMaskContext.Consumer>
-      {metamask => <Component ref={ref} metamask={metamask} {...this.props} />}
-    </MetaMaskContext.Consumer>
-  ));
-}
-
-export const PropTypesMetamask = PropTypes.shape({
-  web3: PropTypes.object,
-  accounts: PropTypes.arrayOf(PropTypes.string).isRequired,
-  error: PropTypes.object, // `Error` type
-  awaiting: PropTypes.bool.isRequired,
-  openMetaMask: PropTypes.func.isRequired,
-});
-
 export default MetaMaskContext;
 ```
 
 ```js
 // MetaMaskButton.js
 import React, { Component } from "react";
+import { withMetaMask, PropTypesMetaMaskObject } from "@tokenfoundry/react-metamask";
 
-import MetaMaskContext, { withMetamask, PropTypesMetamask } from "./metamask";
+import MetaMaskContext from "./metamask";
 
 class MetaMaskButton extends Component {
   static propTypes = {
-    metamask: PropTypesMetamask,
-  };
-
-  static defaultProps = {
-    metamask: {},
+    metamask: PropTypesMetaMaskObject.isRequired,
   };
 
   componentDidMount() {
@@ -175,7 +156,7 @@ class MetaMaskButton extends Component {
   }
 }
 
-export default withMetamask(MetaMaskButton);
+export default withMetaMask(MetaMaskContext)(MetaMaskButton);
 ```
 
 ## License

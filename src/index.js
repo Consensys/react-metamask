@@ -4,16 +4,21 @@ import isEqual from "lodash/isEqual";
 import sortBy from "lodash/sortBy";
 
 import MetaMaskClass from "./MetaMask";
-
-async function withTimeoutRejection(promise, timeout) {
-  const sleep = new Promise((resolve, reject) =>
-    setTimeout(() => reject(new Error("Timeout")), timeout),
-  );
-  return Promise.race([promise, sleep]);
-}
+import * as constants from "./constants";
 
 function isEqualArray(array1, array2) {
   return isEqual(sortBy(array1), sortBy(array2));
+}
+
+function getDisplayName(WrappedComponent) {
+  return WrappedComponent.displayName || WrappedComponent.name || "Component";
+}
+
+export async function withTimeoutRejection(promise, timeout) {
+  const sleep = new Promise((resolve, reject) =>
+    setTimeout(() => reject(new Error(constants.TIMEOUT)), timeout),
+  );
+  return Promise.race([promise, sleep]);
 }
 
 export function createMetaMaskContext(initial = null) {
@@ -55,19 +60,27 @@ export function createMetaMaskContext(initial = null) {
       options: undefined,
     };
 
-    state = {
-      web3: null,
-      accounts: [],
-      awaiting: false,
-      error: null,
-      ...this.props.value,
-    };
+    constructor(props) {
+      super(props);
 
-    watcher = null; // timer created with `setTimeout`
-
-    metamask = null;
+      this.watcher = null; // timer created with `setTimeout`
+      this.metamask = null;
+      this.state = {
+        web3: null,
+        accounts: [],
+        awaiting: false,
+        error: null,
+        ...props.value,
+      };
+    }
 
     componentDidMount() {
+      this.setState({
+        error: MetaMaskClass.hasWeb3()
+          ? null
+          : new Error(constants.NOT_INSTALLED),
+      });
+
       if (this.props.immediate) {
         this.handleWatch();
       }
@@ -107,7 +120,7 @@ export function createMetaMaskContext(initial = null) {
       let accounts = [];
 
       try {
-        const isLocked = error && error.message === "MetaMask is locked";
+        const isLocked = error && error.message === constants.LOCKED;
         if (!this.metamask || isLocked) {
           this.metamask = await withTimeoutRejection(
             MetaMaskClass.initialize(this.props.options),
@@ -163,4 +176,29 @@ export function createMetaMaskContext(initial = null) {
   return Context;
 }
 
+export function withMetaMask(MetaMaskContext) {
+  return function withMetaMaskContext(Comp) {
+    const ComponentWithMetaMask = React.forwardRef((props, ref) => (
+      <MetaMaskContext.Consumer>
+        {metamask => <Comp ref={ref} metamask={metamask} {...props} />}
+      </MetaMaskContext.Consumer>
+    ));
+
+    ComponentWithMetaMask.displayName = `withMetaMask(${getDisplayName(Comp)})`;
+
+    return ComponentWithMetaMask;
+  };
+}
+
+export const PropTypesMetaMask = {
+  web3: PropTypes.object,
+  accounts: PropTypes.arrayOf(PropTypes.string).isRequired,
+  error: PropTypes.object, // `Error` type
+  awaiting: PropTypes.bool.isRequired,
+  openMetaMask: PropTypes.func.isRequired,
+};
+
+export const PropTypesMetaMaskObject = PropTypes.shape(PropTypesMetaMask);
+
 export const MetaMask = MetaMaskClass;
+export const CONSTANTS = constants;
