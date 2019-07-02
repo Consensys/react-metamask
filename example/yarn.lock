@@ -1441,7 +1441,7 @@
     "@svgr/plugin-svgo" "^4.0.3"
     loader-utils "^1.1.0"
 
-"@tokenfoundry/react-metamask@file:..":
+"@daisypayments/react-metamask@file:..":
   version "0.3.0"
   dependencies:
     lodash "^4.17.11"
