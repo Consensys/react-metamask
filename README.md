@@ -1,4 +1,4 @@
-# @tokenfoundry/react-metamask
+# @daisypayments/react-metamask
 
 > MetaMask context for React, **compatible with hooks!**
 
@@ -7,7 +7,7 @@
 This module requires `web3` as an external dependency. For compatibility reasons please use the fixed version stated in this project.
 
 ```sh
-yarn add @tokenfoundry/react-metamask web3@=1.0.0-beta.37
+yarn add @daisypayments/react-metamask web3@=1.0.0-beta.37
 ```
 
 ## Usage
@@ -25,7 +25,7 @@ Create a file with the instantiation of MetaMask's Context:
 
 ```js
 // metamask.js
-import { createMetaMaskContext } from "@tokenfoundry/react-metamask";
+import { createMetaMaskContext } from "@daisypayments/react-metamask";
 
 const MetaMaskContext = createMetaMaskContext();
 export default MetaMaskContext;
@@ -124,7 +124,7 @@ In case you are not using React Hooks and you need access to `web3` and the othe
 // metamask.js
 import React from "react";
 import PropTypes from "prop-types";
-import { createMetaMaskContext } from "@tokenfoundry/react-metamask";
+import { createMetaMaskContext } from "@daisypayments/react-metamask";
 
 const MetaMaskContext = createMetaMaskContext();
 
@@ -134,7 +134,7 @@ export default MetaMaskContext;
 ```js
 // MetaMaskButton.js
 import React, { Component } from "react";
-import { withMetaMask, PropTypesMetaMaskObject } from "@tokenfoundry/react-metamask";
+import { withMetaMask, PropTypesMetaMaskObject } from "@daisypayments/react-metamask";
 
 import MetaMaskContext from "./metamask";
 
