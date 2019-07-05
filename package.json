@@ -1,6 +1,6 @@
 {
   "name": "@daisypayments/react-metamask",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "MetaMask context for React",
   "author": "Patricio López Juri <patricio.juri@consensys.net> (https://lopezjuri.com)",
   "license": "MIT",
