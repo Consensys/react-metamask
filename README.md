@@ -14,7 +14,7 @@ yarn add @daisypayments/react-metamask web3@=1.0.0-beta.37
 
 ### Immediate or not
 
-When rendering the `Provider` you can set `immediate` to `true` (_default_) or `false`.
+When rendering the `Provider` you can set `immediate` to `true` or `false` (_default_).
 
 - `immediate={true}`: Forces MetaMask at the start (opens user prompt).
 - `immediate={false}`: Requires user to call the action openMetaMask from the context's consumer to be able to load `web3` instances and their accounts.
