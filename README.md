@@ -2,6 +2,10 @@
 
 > MetaMask context for React, **compatible with hooks!**
 
+## Deprecated
+
+This project has been deprecated in favor of [web3-react](https://github.com/NoahZinsmeister/web3-react)
+
 ## Install
 
 This module requires `web3` as an external dependency. For compatibility reasons please use the fixed version stated in this project.
